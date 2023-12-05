@@ -14,22 +14,13 @@ typedef unsigned int uint32;
 __global__ void gpuHistogram(uint32* bufferIn, uint32 bufferInSize, uint32* bufferOut, uint32 bufferOutSize)
 {
 	uint32 tid = threadIdx.x + blockIdx.x * blockDim.x;
-
-	if (tid < bufferInSize)
-	{
-		atomicAdd(&bufferOut[bufferIn[tid]], 1);
-	}
+	if (tid < bufferInSize) atomicAdd(&bufferOut[bufferIn[tid]], 1);
 }
 
 __global__ void gpuSaturate(uint32* buffer, uint32 bufferSize, uint32 valueMin, uint32 valueMax)
 {
 	uint32 tid = threadIdx.x + blockIdx.x * blockDim.x;
-	
-	if (tid < bufferSize)
-	{
-		buffer[tid] = buffer[tid] < valueMin ? valueMin : buffer[tid];
-		buffer[tid] = buffer[tid] > valueMax ? valueMax : buffer[tid];
-	}
+	if (tid < bufferSize) buffer[tid] = buffer[tid] > valueMax ? valueMax : buffer[tid];
 }
 
 int main()
