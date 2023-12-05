@@ -48,11 +48,6 @@ int main()
 
 	memset(cpuBuffer3, 0, B * sizeof(uint32));
 
-	cudaMalloc((void**)&gpuBuffer1, A * sizeof(uint32));
-	cudaMalloc((void**)&gpuBuffer2, B * sizeof(uint32));
-
-	cudaMemset(gpuBuffer2, 0, B * sizeof(uint32));
-
 	for (int i = 0; i != A; ++i)
 	{
 		uint32 v      = (uint32)rand() % (uint32)B;
@@ -60,11 +55,15 @@ int main()
 		cpuBuffer3[v] = cpuBuffer3[v] + (cpuBuffer3[v] < 127);
 	}
 
+	cudaMalloc((void**)&gpuBuffer1, A * sizeof(uint32));
+	cudaMalloc((void**)&gpuBuffer2, B * sizeof(uint32));
+
 	uint32 errors  = 0;
 	uint32 threads = 0;
 	uint32 blocks  = 0;
 
 	cudaMemcpy(gpuBuffer1, cpuBuffer1, A * sizeof(uint32), cudaMemcpyHostToDevice);
+	cudaMemset(gpuBuffer2, 0, B * sizeof(uint32));
 
 	threads = 64;
 	blocks  = (A + threads - 1) / threads;
@@ -75,7 +74,6 @@ int main()
 	gpuSaturate<<<blocks, threads>>>(gpuBuffer2, B, 0, 127);
 
 	cudaDeviceSynchronize();
-
 	cudaMemcpy(cpuBuffer2, gpuBuffer2, B * sizeof(uint32), cudaMemcpyDeviceToHost);
 
 	for (int i = 0; i != B; ++i)
