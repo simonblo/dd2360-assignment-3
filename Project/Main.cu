@@ -6,7 +6,7 @@
 #include <string.h>
 #include <time.h>
 
-#define A 1024
+#define A (1<<25)
 #define B 4096
 
 typedef unsigned int uint32;
