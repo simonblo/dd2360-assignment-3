@@ -17,6 +17,29 @@ __global__ void gpuHistogram(uint32* bufferIn, uint32 bufferInSize, uint32* buff
 	if (tid < bufferInSize) atomicAdd(&bufferOut[bufferIn[tid]], 1);
 }
 
+__global__ void gpuHistogram2(uint32* bufferIn, uint32 bufferInSize, uint32* bufferOut, uint32 bufferOutSize)
+{
+	__shared__ uint32 groupshared[B];
+
+	uint32 tid = threadIdx.x;
+	uint32 gid = threadIdx.x + blockIdx.x * blockDim.x;
+
+	for (int i = 0; i < B; i += blockDim.x)
+	{
+		groupshared[i + tid] = 0;
+	}
+
+	if (gid < bufferInSize)
+	{
+		atomicAdd(&groupshared[bufferIn[gid]], 1);
+	}
+
+	for (int i = 0; i < B; i += blockDim.x)
+	{
+		atomicAdd(&bufferOut[i + tid], groupshared[i + tid]);
+	}
+}
+
 __global__ void gpuSaturate(uint32* buffer, uint32 bufferSize, uint32 valueMin, uint32 valueMax)
 {
 	uint32 tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -36,6 +59,10 @@ int main()
 	cpuBuffer1 = (uint32*)malloc(A * sizeof(uint32));
 	cpuBuffer2 = (uint32*)malloc(B * sizeof(uint32));
 	cpuBuffer3 = (uint32*)malloc(B * sizeof(uint32));
+
+	//cudaHostAlloc((void**)&cpuBuffer1, A * sizeof(uint32), cudaHostAllocDefault);
+	//cudaHostAlloc((void**)&cpuBuffer2, B * sizeof(uint32), cudaHostAllocDefault);
+	//cudaHostAlloc((void**)&cpuBuffer3, B * sizeof(uint32), cudaHostAllocDefault);
 
 	memset(cpuBuffer3, 0, B * sizeof(uint32));
 
@@ -81,6 +108,10 @@ int main()
 	free(cpuBuffer1);
 	free(cpuBuffer2);
 	free(cpuBuffer3);
+
+	//cudaFreeHost(cpuBuffer1);
+	//cudaFreeHost(cpuBuffer2);
+	//cudaFreeHost(cpuBuffer3);
 
 	return 0;
 }
