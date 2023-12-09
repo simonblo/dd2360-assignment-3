@@ -41,6 +41,10 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir)include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(ProjectDir)include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -77,7 +81,47 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="Main.cu" />
+    <ClInclude Include="include\Alloc.h" />
+    <ClInclude Include="include\Basic.h" />
+    <ClInclude Include="include\BC.h" />
+    <ClInclude Include="include\ConfigFile.h" />
+    <ClInclude Include="include\EMfield.h" />
+    <ClInclude Include="include\EMfield_aux.h" />
+    <ClInclude Include="include\Grid.h" />
+    <ClInclude Include="include\IC.h" />
+    <ClInclude Include="include\input_array.h" />
+    <ClInclude Include="include\InterpDensNet.h" />
+    <ClInclude Include="include\InterpDensSpecies.h" />
+    <ClInclude Include="include\Parameters.h" />
+    <ClInclude Include="include\Particles.h" />
+    <ClInclude Include="include\Particles_aux.h" />
+    <ClInclude Include="include\PrecisionTypes.h" />
+    <ClInclude Include="include\RW_IO.h" />
+    <ClInclude Include="include\Smoothing.h" />
+    <ClInclude Include="include\Timing.h" />
+    <ClInclude Include="include\TransArraySpace3D.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="inputfiles\GEM_2D.inp" />
+    <None Include="inputfiles\GEM_3D.inp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Basic.cpp" />
+    <ClCompile Include="src\BC.cpp" />
+    <ClCompile Include="src\ConfigFile.cpp" />
+    <ClCompile Include="src\EMfield.cpp" />
+    <ClCompile Include="src\EMfield_aux.cpp" />
+    <ClCompile Include="src\Grid.cpp" />
+    <ClCompile Include="src\InterpDensNet.cpp" />
+    <ClCompile Include="src\InterpDensSpecies.cpp" />
+    <ClCompile Include="src\Particles_aux.cpp" />
+    <ClCompile Include="src\RW_IO.cpp" />
+    <ClCompile Include="src\sputniPIC.cpp" />
+    <ClCompile Include="src\Timing.cpp" />
+    <ClCompile Include="src\TransArraySpace3D.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\Particles.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

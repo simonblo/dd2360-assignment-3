@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{4503b2db-b1c4-4d96-9c92-e5ac23d5aed3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inputfiles">
+      <UniqueIdentifier>{c4ce11a7-8c3d-4624-9bda-79c451646f3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{20f66a3e-2af9-4361-90b0-de92c9c0a714}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\Alloc.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Basic.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BC.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ConfigFile.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EMfield.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EMfield_aux.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Grid.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IC.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\input_array.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\InterpDensNet.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\InterpDensSpecies.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Parameters.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Particles.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Particles_aux.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\PrecisionTypes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RW_IO.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Smoothing.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Timing.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TransArraySpace3D.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="inputfiles\GEM_2D.inp">
+      <Filter>inputfiles</Filter>
+    </None>
+    <None Include="inputfiles\GEM_3D.inp">
+      <Filter>inputfiles</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Basic.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BC.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ConfigFile.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EMfield.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EMfield_aux.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Grid.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InterpDensNet.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InterpDensSpecies.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Particles_aux.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RW_IO.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sputniPIC.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Timing.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TransArraySpace3D.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\Particles.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>
