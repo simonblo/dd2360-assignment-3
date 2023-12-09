@@ -6,44 +6,40 @@
 #include <string.h>
 #include <time.h>
 
-#define N (1<<25)
+#define N 16777216
 #define B 4096
 
 typedef unsigned int uint32;
 
 __global__ void gpuHistogram(uint32* bufferIn, uint32 bufferInSize, uint32* bufferOut, uint32 bufferOutSize)
 {
-	uint32 tid = threadIdx.x + blockIdx.x * blockDim.x;
-	if (tid < bufferInSize) atomicAdd(&bufferOut[bufferIn[tid]], 1);
-}
-
-__global__ void gpuHistogram2(uint32* bufferIn, uint32 bufferInSize, uint32* bufferOut, uint32 bufferOutSize)
-{
 	__shared__ uint32 groupshared[B];
+	uint32 tid = threadIdx.x + blockIdx.x * blockDim.x;
 
-	uint32 tid = threadIdx.x;
-	uint32 gid = threadIdx.x + blockIdx.x * blockDim.x;
-
-	for (int i = 0; i < B; i += blockDim.x)
+	for (int i = threadIdx.x; i < B; i += blockDim.x)
 	{
-		groupshared[i + tid] = 0;
+		groupshared[i] = 0;
 	}
 
-	if (gid < bufferInSize)
+	__syncthreads();
+
+	if (tid < bufferInSize)
 	{
-		atomicAdd(&groupshared[bufferIn[gid]], 1);
+		atomicAdd(&groupshared[bufferIn[tid]], 1);
 	}
 
-	for (int i = 0; i < B; i += blockDim.x)
+	__syncthreads();
+
+	for (int i = threadIdx.x; i < B; i += blockDim.x)
 	{
-		atomicAdd(&bufferOut[i + tid], groupshared[i + tid]);
+		atomicAdd(&bufferOut[i], groupshared[i]);
 	}
 }
 
-__global__ void gpuSaturate(uint32* buffer, uint32 bufferSize, uint32 valueMin, uint32 valueMax)
+__global__ void gpuSaturate(uint32* buffer, uint32 bufferSize)
 {
 	uint32 tid = threadIdx.x + blockIdx.x * blockDim.x;
-	if (tid < bufferSize) buffer[tid] = buffer[tid] > valueMax ? valueMax : buffer[tid];
+	if (tid < bufferSize) buffer[tid] = buffer[tid] > 127 ? 127 : buffer[tid];
 }
 
 int main()
@@ -79,7 +75,7 @@ int main()
 
 	threads = 64;
 	blocks  = (B + threads - 1) / threads;
-	gpuSaturate<<<blocks, threads>>>(gpuBuffer2, B, 0, 127);
+	gpuSaturate<<<blocks, threads>>>(gpuBuffer2, B);
 
 	cudaDeviceSynchronize();
 	cudaMemcpy(cpuBuffer2, gpuBuffer2, B * sizeof(uint32), cudaMemcpyDeviceToHost);
@@ -89,7 +85,7 @@ int main()
 
 	for (int i = 0; i != N; ++i)
 	{
-		values[cpuBuffer1[i]] += values[cpuBuffer1[i]] < 127 ? 1 : 0;
+		values[cpuBuffer1[i]] += (values[cpuBuffer1[i]] < 127) ? 1 : 0;
 	}
 
 	for (int i = 0; i != B; ++i)
