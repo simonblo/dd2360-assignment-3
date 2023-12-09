@@ -2,8 +2,7 @@
 
 double cpuSecond()
 {
-    //struct timeval tp;
-    //gettimeofday(&tp, nullptr);
-    //return ((double)tp.tv_sec + (double)tp.tv_usec*1.e-6);
-    return 0.0;
+    struct timespec tp;
+    timespec_get(&tp, TIME_UTC);
+    return ((double)tp.tv_sec + (double)tp.tv_nsec*1.e-9);
 }
