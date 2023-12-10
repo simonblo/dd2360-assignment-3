@@ -251,28 +251,90 @@ int mover_PC_gpu(struct particles* part, struct EMfield* field, struct grid* grd
     // print species and subcycling
     std::cout << "*** GPU MOVER with SUBCYCLYING " << param->n_sub_cycles << " - species " << part->species_ID << " ***" << std::endl;
 
-    // CPU-GPU transfer
-    struct particles*  gpu_part;
-    struct EMfield*    gpu_field;
-    struct grid*       gpu_grd;
-    struct parameters* gpu_param;
-    cudaMalloc((void**)&gpu_part,  14);
-    cudaMalloc((void**)&gpu_field, 14);
-    cudaMalloc((void**)&gpu_grd,   14);
-    cudaMalloc((void**)&gpu_param, 14);
-    cudaMemcpy(gpu_part,  part,  14, cudaMemcpyHostToDevice);
-    cudaMemcpy(gpu_field, field, 14, cudaMemcpyHostToDevice);
-    cudaMemcpy(gpu_grd,   grd,   14, cudaMemcpyHostToDevice);
-    cudaMemcpy(gpu_param, param, 14, cudaMemcpyHostToDevice);
+    struct particles gpu_part;
+    struct EMfield   gpu_field;
+    struct grid      gpu_grd;
+
+    memcpy(&gpu_part,  part,  sizeof(particles));
+    memcpy(&gpu_field, field, sizeof(EMfield));
+    memcpy(&gpu_grd,   grd,   sizeof(grid));
+
+    // GPU allocation for particles
+    cudaMalloc(&gpu_part.x, sizeof(FPpart) * gpu_part.npmax);
+    cudaMalloc(&gpu_part.y, sizeof(FPpart) * gpu_part.npmax);
+    cudaMalloc(&gpu_part.z, sizeof(FPpart) * gpu_part.npmax);
+    cudaMalloc(&gpu_part.u, sizeof(FPpart) * gpu_part.npmax);
+    cudaMalloc(&gpu_part.v, sizeof(FPpart) * gpu_part.npmax);
+    cudaMalloc(&gpu_part.w, sizeof(FPpart) * gpu_part.npmax);
+
+    // GPU allocation for field
+    cudaMalloc(&gpu_field.Bxn, sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn);
+    cudaMalloc(&gpu_field.Byn, sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn);
+    cudaMalloc(&gpu_field.Bzn, sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn);
+    cudaMalloc(&gpu_field.Ex,  sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn);
+    cudaMalloc(&gpu_field.Ey,  sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn);
+    cudaMalloc(&gpu_field.Ez,  sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn);
+
+    // GPU allocation for grid
+    cudaMalloc(&gpu_grd.XN,  sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn);
+    cudaMalloc(&gpu_grd.YN,  sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn);
+    cudaMalloc(&gpu_grd.ZN,  sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn);
+
+    // CPU-GPU transfer for particles
+    cudaMemcpy(gpu_part.x, part->x, sizeof(FPpart) * gpu_part.npmax, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_part.y, part->y, sizeof(FPpart) * gpu_part.npmax, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_part.z, part->z, sizeof(FPpart) * gpu_part.npmax, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_part.u, part->u, sizeof(FPpart) * gpu_part.npmax, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_part.v, part->v, sizeof(FPpart) * gpu_part.npmax, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_part.w, part->w, sizeof(FPpart) * gpu_part.npmax, cudaMemcpyHostToDevice);
+
+    // CPU-GPU transfer for field
+    cudaMemcpy(gpu_field.Bxn, field->Bxn_flat, sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_field.Byn, field->Byn_flat, sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_field.Bzn, field->Bzn_flat, sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_field.Ex,  field->Ex_flat,  sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_field.Ey,  field->Ey_flat,  sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_field.Ez,  field->Ez_flat,  sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn, cudaMemcpyHostToDevice);
+
+    // CPU-GPU transfer for grid
+    cudaMemcpy(gpu_grd.XN, grd->XN_flat, sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_grd.YN, grd->YN_flat, sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_grd.ZN, grd->ZN_flat, sizeof(FPfield) * gpu_grd.nxn * gpu_grd.nyn * gpu_grd.nzn, cudaMemcpyHostToDevice);
 
     // GPU execution
     int threads = 64;
     int blocks  = (part->nop + threads - 1) / threads;
-    mover_PC_gpu_kernel<<<threads, blocks>>>(gpu_part, gpu_field, gpu_grd, gpu_param);
+    mover_PC_gpu_kernel<<<threads, blocks>>>(&gpu_part, &gpu_field, &gpu_grd, param);
     cudaDeviceSynchronize();
 
-    // GPU-CPU transfer
-    cudaMemcpy(part, gpu_part, 14, cudaMemcpyDeviceToHost);
+    // GPU-CPU transfer for particles
+    cudaMemcpy(part->x, gpu_part.x, sizeof(FPpart) * part->npmax, cudaMemcpyDeviceToHost);
+    cudaMemcpy(part->y, gpu_part.y, sizeof(FPpart) * part->npmax, cudaMemcpyDeviceToHost);
+    cudaMemcpy(part->z, gpu_part.z, sizeof(FPpart) * part->npmax, cudaMemcpyDeviceToHost);
+    cudaMemcpy(part->u, gpu_part.u, sizeof(FPpart) * part->npmax, cudaMemcpyDeviceToHost);
+    cudaMemcpy(part->v, gpu_part.v, sizeof(FPpart) * part->npmax, cudaMemcpyDeviceToHost);
+    cudaMemcpy(part->w, gpu_part.w, sizeof(FPpart) * part->npmax, cudaMemcpyDeviceToHost);
+
+    // GPU deallocation for particles
+    cudaFree(gpu_part.x);
+    cudaFree(gpu_part.y);
+    cudaFree(gpu_part.z);
+    cudaFree(gpu_part.u);
+    cudaFree(gpu_part.v);
+    cudaFree(gpu_part.w);
+
+    // GPU deallocation for field
+    cudaFree(gpu_field.Bxn);
+    cudaFree(gpu_field.Byn);
+    cudaFree(gpu_field.Bzn);
+    cudaFree(gpu_field.Ex);
+    cudaFree(gpu_field.Ey);
+    cudaFree(gpu_field.Ez);
+
+    // GPU deallocation for grid
+    cudaFree(gpu_grd.XN);
+    cudaFree(gpu_grd.YN);
+    cudaFree(gpu_grd.ZN);
 
     return(0);
 }
@@ -295,7 +357,7 @@ __global__ void mover_PC_gpu_kernel(struct particles* part, struct EMfield* fiel
 
         // interpolation densities
         int ix, iy, iz;
-        FPfield weight[2][2][2];
+        FPfield weight[8];
         FPfield xi[2], eta[2], zeta[2];
 
         // intermediate particle position and velocity
@@ -317,16 +379,16 @@ __global__ void mover_PC_gpu_kernel(struct particles* part, struct EMfield* fiel
                 iz = 2 + int((part->z[i] - grd->zStart) * grd->invdz);
 
                 // calculate weights
-                xi[0]   = part->x[i] - grd->XN[ix - 1][iy][iz];
-                eta[0]  = part->y[i] - grd->YN[ix][iy - 1][iz];
-                zeta[0] = part->z[i] - grd->ZN[ix][iy][iz - 1];
-                xi[1]   = grd->XN[ix][iy][iz] - part->x[i];
-                eta[1]  = grd->YN[ix][iy][iz] - part->y[i];
-                zeta[1] = grd->ZN[ix][iy][iz] - part->z[i];
+                xi[0]   = part->x[i] - grd->XN_flat[get_idx(ix - 1, iy, iz, grd->nyn, grd->nzn)];
+                eta[0]  = part->y[i] - grd->YN_flat[get_idx(ix, iy - 1, iz, grd->nyn, grd->nzn)];
+                zeta[0] = part->z[i] - grd->ZN_flat[get_idx(ix, iy, iz - 1, grd->nyn, grd->nzn)];
+                xi[1]   = grd->XN_flat[get_idx(ix, iy, iz, grd->nyn, grd->nzn)] - part->x[i];
+                eta[1]  = grd->YN_flat[get_idx(ix, iy, iz, grd->nyn, grd->nzn)] - part->y[i];
+                zeta[1] = grd->ZN_flat[get_idx(ix, iy, iz, grd->nyn, grd->nzn)] - part->z[i];
                 for (int ii = 0; ii < 2; ii++)
                     for (int jj = 0; jj < 2; jj++)
                         for (int kk = 0; kk < 2; kk++)
-                            weight[ii][jj][kk] = xi[ii] * eta[jj] * zeta[kk] * grd->invVOL;
+                            weight[get_idx(ii, jj, kk, 2, 2)] = xi[ii] * eta[jj] * zeta[kk] * grd->invVOL;
 
                 // set to zero local electric and magnetic field
                 Exl = 0.0, Eyl = 0.0, Ezl = 0.0, Bxl = 0.0, Byl = 0.0, Bzl = 0.0;
@@ -335,12 +397,12 @@ __global__ void mover_PC_gpu_kernel(struct particles* part, struct EMfield* fiel
                     for (int jj = 0; jj < 2; jj++)
                         for (int kk = 0; kk < 2; kk++)
                         {
-                            Exl += weight[ii][jj][kk] * field->Ex[ix - ii][iy - jj][iz - kk];
-                            Eyl += weight[ii][jj][kk] * field->Ey[ix - ii][iy - jj][iz - kk];
-                            Ezl += weight[ii][jj][kk] * field->Ez[ix - ii][iy - jj][iz - kk];
-                            Bxl += weight[ii][jj][kk] * field->Bxn[ix - ii][iy - jj][iz - kk];
-                            Byl += weight[ii][jj][kk] * field->Byn[ix - ii][iy - jj][iz - kk];
-                            Bzl += weight[ii][jj][kk] * field->Bzn[ix - ii][iy - jj][iz - kk];
+                            Exl += weight[get_idx(ii, jj, kk, 2, 2)] * field->Ex_flat[get_idx(ix - ii, iy - jj, iz - kk, grd->nyn, grd->nzn)];
+                            Eyl += weight[get_idx(ii, jj, kk, 2, 2)] * field->Ey_flat[get_idx(ix - ii, iy - jj, iz - kk, grd->nyn, grd->nzn)];
+                            Ezl += weight[get_idx(ii, jj, kk, 2, 2)] * field->Ez_flat[get_idx(ix - ii, iy - jj, iz - kk, grd->nyn, grd->nzn)];
+                            Bxl += weight[get_idx(ii, jj, kk, 2, 2)] * field->Bxn_flat[get_idx(ix - ii, iy - jj, iz - kk, grd->nyn, grd->nzn)];
+                            Byl += weight[get_idx(ii, jj, kk, 2, 2)] * field->Byn_flat[get_idx(ix - ii, iy - jj, iz - kk, grd->nyn, grd->nzn)];
+                            Bzl += weight[get_idx(ii, jj, kk, 2, 2)] * field->Bzn_flat[get_idx(ix - ii, iy - jj, iz - kk, grd->nyn, grd->nzn)];
                         }
 
                 // end interpolation

@@ -10,8 +10,8 @@
 #include "EMfield.h"
 #include "InterpDensSpecies.h"
 
-struct particles {
-    
+struct particles
+{
     /** species ID: 0, 1, 2 , ... */
     int species_ID;
     
@@ -47,9 +47,6 @@ struct particles {
     FPpart* x; FPpart*  y; FPpart* z; FPpart* u; FPpart* v; FPpart* w;
     /** q must have precision of interpolated quantities: typically double. Not used in mover */
     FPinterp* q;
-    
-    
-    
 };
 
 /** allocate particle arrays */
